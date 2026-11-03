@@ -83,8 +83,9 @@ if st.button("Predict Roof Fall Risk"):
     probabilities = model.predict_proba(input_data)[0]
 
 
-    # 6. Display prediction
- 
+    # Display Prediction
+
+    st.divider()
     st.subheader("Prediction Result")
 
     if prediction == "Low":
@@ -97,25 +98,54 @@ if st.button("Predict Roof Fall Risk"):
         st.error("🔴 HIGH ROOF FALL RISK")
 
 
-    # 7. Display probabilities
-    
+    # --------------------------------------------------
+    # Risk Probabilities
+    # --------------------------------------------------
+
     st.subheader("Risk Probabilities")
 
-    for risk_class, probability in zip(
-        model.classes_,
-        probabilities
-    ):
-        st.write(
-            f"{risk_class}: {probability * 100:.2f}%"
+    probability_dict = {
+        risk_class: probability
+        for risk_class, probability in zip(
+            model.classes_,
+            probabilities
+        )
+    }
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            "🟢 Low",
+            f"{probability_dict.get('Low', 0) * 100:.1f}%"
+        )
+
+    with col2:
+        st.metric(
+            "🟡 Moderate",
+            f"{probability_dict.get('Moderate', 0) * 100:.1f}%"
+        )
+
+    with col3:
+        st.metric(
+            "🔴 High",
+            f"{probability_dict.get('High', 0) * 100:.1f}%"
         )
 
 
-# 8. Disclaimer
+    # --------------------------------------------------
+    # Probability Chart
+    # --------------------------------------------------
 
-st.divider()
+    probability_df = pd.DataFrame({
+        "Risk Level": ["Low", "Moderate", "High"],
+        "Probability": [
+            probability_dict.get("Low", 0),
+            probability_dict.get("Moderate", 0),
+            probability_dict.get("High", 0)
+        ]
+    })
 
-st.caption(
-    "This prediction system is developed for academic and "
-    "research purposes. It should not replace statutory mine "
-    "safety assessments or professional engineering judgement."
-)
+    probability_df = probability_df.set_index("Risk Level")
+
+    st.bar_chart(probability_df)
